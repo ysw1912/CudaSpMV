@@ -18,6 +18,31 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="brc_spmv_core.h" />
+    <ClInclude Include="cpu_helper.h" />
+    <ClInclude Include="gpu_helper.h" />
+    <ClInclude Include="light_spmv_core.h" />
+    <ClInclude Include="mmio.h" />
+    <ClInclude Include="pagerank.h" />
+    <ClInclude Include="profiler.h" />
+    <ClInclude Include="sparse_matrix.h" />
+    <ClInclude Include="spmv.h" />
+    <ClInclude Include="test.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cpu_helper.cpp" />
+    <ClCompile Include="mmio.cpp" />
+    <ClCompile Include="profiler.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="gpu_helper.cu" />
+    <CudaCompile Include="main.cu" />
+    <CudaCompile Include="pagerank.cu" />
+    <CudaCompile Include="sparse_matrix.cu" />
+    <CudaCompile Include="spmv.cu" />
+    <CudaCompile Include="test.cu" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{ACC4B682-C38F-4E58-8C07-147E0A4CB5A0}</ProjectGuid>
@@ -102,7 +127,7 @@
       <PrecompiledHeader>
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <AdditionalOptions>/D _CRT_SECURE_NO_WARNINGS %(AdditionalOptions)</AdditionalOptions>
@@ -145,31 +170,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <CudaCompile Include="..\..\CSpMV\CudaSpMV\gpu_helper.cu" />
-    <CudaCompile Include="..\..\CSpMV\CudaSpMV\main.cu" />
-    <CudaCompile Include="..\..\CSpMV\CudaSpMV\pagerank.cu" />
-    <CudaCompile Include="..\..\CSpMV\CudaSpMV\sparse_matrix.cu" />
-    <CudaCompile Include="..\..\CSpMV\CudaSpMV\spmv.cu" />
-    <CudaCompile Include="..\..\CSpMV\CudaSpMV\test.cu" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\brc_spmv_core.h" />
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\cpu_helper.h" />
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\gpu_helper.h" />
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\light_spmv_core.h" />
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\mmio.h" />
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\pagerank.h" />
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\profiler.h" />
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\sparse_matrix.h" />
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\spmv.h" />
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\test.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\CSpMV\CudaSpMV\cpu_helper.cpp" />
-    <ClCompile Include="..\..\CSpMV\CudaSpMV\mmio.cpp" />
-    <ClCompile Include="..\..\CSpMV\CudaSpMV\profiler.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.0.targets" />

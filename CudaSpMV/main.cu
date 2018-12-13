@@ -1,4 +1,4 @@
-ï»¿#include "pagerank.h"
+#include "pagerank.h"
 #include "test.h"
 
 using ValueType = float;
@@ -12,9 +12,9 @@ int main()
 	//test::test02();
 
 	checkCudaError(cudaDeviceReset());
-
-	TestSpMV();
-	//TestPageRank();
+	
+	//TestSpMV();
+	TestPageRank();
 
 	return 0;
 }
@@ -28,16 +28,22 @@ void TestSpMV()
 	//coo.ReadFileSetValue(FILE_PATH, isDirected);
 	coo.ReadFileContainValue(FILE_PATH, isDirected);
 
+	Profiler::Start();
+	CsrMatrix<ValueType> csr(coo);
+	Profiler::Finish();
+	printf("%f (s)\nConvert to CSR format Finished.\n",
+		Profiler::dumpDuration() / CLOCKS_PER_SEC);
+
 	uint32_t N = static_cast<uint32_t>(coo.num_vertices);
 
-	/* Â¿Ã‰Ã‘Â¡Â¸Ã±ÃŠÂ½ - CSR_CUSPARSE, CSR_LIGHTSPMV, BRC_SPMV, BRCP_SPMV */
+	/* ¿ÉÑ¡¸ñÊ½ - CSR_CUSPARSE, CSR_LIGHTSPMV, BRC_SPMV, BRCP_SPMV */
 	vector<ValueType> res(N);
-	spmv<ValueType, 1>(coo, &res[0], CSR_CUSPARSE);
+	spmv<ValueType, 1>(csr, &res[0], CSR_CUSPARSE);
 
 	vector<ValueType> res1(N);
-	spmv<ValueType, 1>(coo, &res1[0], BRC_SPMV);
+	spmv<ValueType, 1>(csr, &res1[0], BRC_SPMV);
 	vector<ValueType> res2(N);
-	spmv<ValueType, 1>(coo, &res2[0], BRCP_SPMV);
+	spmv<ValueType, 1>(csr, &res2[0], BRCP_SPMV);
 
 	ValueType re1 = RelativeError(res, res1);
 	ValueType re2 = RelativeError(res, res2);
@@ -63,11 +69,11 @@ void TestPageRank()
 
 	uint32_t N = static_cast<uint32_t>(coo.num_vertices);
 
-	/* Â¿Ã‰Ã‘Â¡Â¸Ã±ÃŠÂ½ - CSR_CUSPARSE, CSR_LIGHTSPMV, BRC_SPMV, BRCP_SPMV */
+	/* ¿ÉÑ¡¸ñÊ½ - CSR_CUSPARSE, CSR_LIGHTSPMV, BRC_SPMV, BRCP_SPMV */
 	PrNode<ValueType>* vecPR1 = new PrNode<ValueType>[N];
 	pagerank<ValueType, 1>(csr, vecPR1, CSR_CUSPARSE);
 	PR_Print(vecPR1, N);
-
+	
 	PrNode<ValueType>* vecPR2 = new PrNode<ValueType>[N];
 	pagerank<ValueType, 1>(csr, vecPR2, BRC_SPMV);
 	PR_Print(vecPR2, N);
@@ -77,9 +83,9 @@ void TestPageRank()
 	PR_Print(vecPR3, N);
 
 	int n = 100;
-	printf("BRC  Ã‡Â° %d Â½Ã¡Â¹Ã»ÂµÃ„ÃÃ ÃÂ¬Â¸Ã¶ÃŠÃ½: %d\n", n, VecPrComp(vecPR1, vecPR2, n));
-	printf("BRCP Ã‡Â° %d Â½Ã¡Â¹Ã»ÂµÃ„ÃÃ ÃÂ¬Â¸Ã¶ÃŠÃ½: %d\n", n, VecPrComp(vecPR1, vecPR3, n));
-
+	printf("BRC  Ç° %d ½á¹ûµÄÏàÍ¬¸öÊı: %d\n", n, VecPrComp(vecPR1, vecPR2, n));
+	printf("BRCP Ç° %d ½á¹ûµÄÏàÍ¬¸öÊı: %d\n", n, VecPrComp(vecPR1, vecPR3, n));
+	
 	delete[] vecPR1;
 	delete[] vecPR2;
 	delete[] vecPR3;

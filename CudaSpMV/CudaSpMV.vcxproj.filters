@@ -15,66 +15,66 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\..\CSpMV\CudaSpMV\gpu_helper.cu">
-      <Filter>源文件</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\CSpMV\CudaSpMV\pagerank.cu">
-      <Filter>源文件</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\CSpMV\CudaSpMV\sparse_matrix.cu">
-      <Filter>源文件</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\CSpMV\CudaSpMV\spmv.cu">
-      <Filter>源文件</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\CSpMV\CudaSpMV\test.cu">
-      <Filter>源文件</Filter>
-    </CudaCompile>
-    <CudaCompile Include="..\..\CSpMV\CudaSpMV\main.cu">
-      <Filter>源文件</Filter>
-    </CudaCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\brc_spmv_core.h">
+    <ClInclude Include="brc_spmv_core.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\cpu_helper.h">
+    <ClInclude Include="cpu_helper.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\gpu_helper.h">
+    <ClInclude Include="test.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\light_spmv_core.h">
+    <ClInclude Include="gpu_helper.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\mmio.h">
+    <ClInclude Include="light_spmv_core.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\pagerank.h">
+    <ClInclude Include="mmio.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\profiler.h">
+    <ClInclude Include="pagerank.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\sparse_matrix.h">
+    <ClInclude Include="profiler.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\spmv.h">
+    <ClInclude Include="sparse_matrix.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\CSpMV\CudaSpMV\test.h">
+    <ClInclude Include="spmv.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\CSpMV\CudaSpMV\cpu_helper.cpp">
+    <ClCompile Include="cpu_helper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\CSpMV\CudaSpMV\mmio.cpp">
+    <ClCompile Include="mmio.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\CSpMV\CudaSpMV\profiler.cpp">
+    <ClCompile Include="profiler.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="test.cu">
+      <Filter>源文件</Filter>
+    </CudaCompile>
+    <CudaCompile Include="gpu_helper.cu">
+      <Filter>源文件</Filter>
+    </CudaCompile>
+    <CudaCompile Include="main.cu">
+      <Filter>源文件</Filter>
+    </CudaCompile>
+    <CudaCompile Include="pagerank.cu">
+      <Filter>源文件</Filter>
+    </CudaCompile>
+    <CudaCompile Include="sparse_matrix.cu">
+      <Filter>源文件</Filter>
+    </CudaCompile>
+    <CudaCompile Include="spmv.cu">
+      <Filter>源文件</Filter>
+    </CudaCompile>
   </ItemGroup>
 </Project>
