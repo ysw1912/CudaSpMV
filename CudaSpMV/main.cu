@@ -22,9 +22,9 @@ int main()
 void TestSpMV()
 {
 	//const string FILE_PATH = "F:\\networks\\nvidia research\\webbase-1M.mtx";
-	const string FILE_PATH = "F:\\networks\\udgraph\\human_gene2.mtx";
+	const string FILE_PATH = "F:\\networks\\soc-sign-bitcoin-otc.mtx";
 	CooMatrix<ValueType> coo;
-	bool isDirected = false;
+	bool isDirected = true;
 	//coo.ReadFileSetValue(FILE_PATH, isDirected);
 	coo.ReadFileContainValue(FILE_PATH, isDirected);
 
@@ -53,8 +53,8 @@ void TestSpMV()
 
 void TestPageRank()
 {
-	const string FILE_PATH = "F:\\networks\\real2.csv";
-	//const string FILE_PATH = "F:\\networks\\snap\\com-Youtube.mtx";
+	//const string FILE_PATH = "F:\\networks\\real2.csv";
+	const string FILE_PATH = "F:\\networks\\law\\dblp-2010.mtx";
 	CooMatrix<ValueType> coo;
 	bool isDirected = false;
 	coo.ReadFileSetValue(FILE_PATH, isDirected);
