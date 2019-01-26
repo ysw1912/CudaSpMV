@@ -45,6 +45,9 @@
     <ClInclude Include="spmv.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="gputimer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cpu_helper.cpp">

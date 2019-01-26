@@ -33,13 +33,24 @@ using std::unique_ptr;
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
-// 输出ep指向的ElemType类型开始的n个元素
-template <typename ElemType>
-void Print(const void* ep, size_t n)
+/*
+** 输出ep指向的T类型开始的n个元素
+** 设show_all为false则只打印前6个以及后4个元素
+**/
+template <typename T>
+void Print(const void* ep, size_t n, bool show_all = true)
 {
 	printf("{ ");
-	for (size_t i = 0; i < n; i++) {
-		cout << *(static_cast<const ElemType*>(ep) + i) << " ";
+	if (show_all || n <= 10) {
+		for (size_t i = 0; i < n; i++)
+			cout << *(static_cast<const T*>(ep) + i) << " ";
+	}
+	else {
+		for (size_t i = 0; i < 6; i++)
+			cout << *(static_cast<const T*>(ep) + i) << " ";
+		printf("... ");
+		for (size_t i = n - 4; i < n; i++)
+			cout << *(static_cast<const T*>(ep) + i) << " ";
 	}
 	printf("}\n");
 }

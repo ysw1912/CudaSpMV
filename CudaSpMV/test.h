@@ -42,5 +42,8 @@ namespace test
 
 	void test01();
 	void test02();
+
+	void ExclusiveScanHost(uint32_t* dst, uint32_t* src, uint32_t size);
+	void ExclusiveScan(uint32_t* d_Dst, uint32_t* d_Src, uint32_t size);
 }
 

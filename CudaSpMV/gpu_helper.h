@@ -2,13 +2,13 @@
 #define __GPU_HELPER__
 
 #include "cpu_helper.h"
+#include "gputimer.h"
 
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #include <texture_fetch_functions.h>
 #include <sm_20_intrinsics.h>
 #include <sm_30_intrinsics.h>	// for __syncwarp()
-#include <gputimer.h>
 
 /* CuSparse */
 #include <cusparse.h>
@@ -29,16 +29,6 @@
 namespace cg = cooperative_groups;
 #endif
 
-/*macros for cuda array*/
-#if !defined(SPMV_CUDA_ARRAY_WIDTH_SHIFT) || SPMV_CUDA_ARRAY_WIDTH_SHIFT < 10 || SPMV_CUDA_ARRAY_WIDTH_SHIFT > 16
-#define SPMV_CUDA_ARRAY_WIDTH_SHIFT	15
-#endif
-#define SPMV_CUDA_ARRAY_WIDTH_MASK	((1 << SPMV_CUDA_ARRAY_WIDTH_SHIFT) - 1)	// 32767
-#define SPMV_CUDA_ARRAY_WIDTH		(1 << SPMV_CUDA_ARRAY_WIDTH_SHIFT)			// 32768
-
-/*maximum number of threads per block*/
-#define MAX_NUM_THREADS_PER_BLOCK	1024	//1024
-
 #define checkCudaError(err) __CheckCudaError( err, __FILE__, __LINE__ )
 static void __CheckCudaError(cudaError_t err, const char *file, const int32_t line)
 {
@@ -57,7 +47,8 @@ static void __CheckCusparseError(cusparseStatus_t status, const char *file, cons
 	}
 }
 
-void getInfo();
+// 获取GPU参数信息
+void getDeviceInfo(uint32_t& numThreadsPerBlock, uint32_t& numBlocks);
 
 // 大小未定的共享内存工具类
 // 使用extern避免链接错误
@@ -119,7 +110,7 @@ __global__ void Reduce(T* g_idata, size_t n, T* sum)
 	uint32_t tid = threadIdx.x;
 	uint32_t i = blockIdx.x * blockDim.x + threadIdx.x;
 	uint32_t gridSize = blockDim.x * gridDim.x;
-	uint32_t blockSize = 512;
+	uint32_t blockSize = blockDim.x / 2;
 
 	T mySum = 0;
 	// 每个线程reduce多个元素，取决于active blocks数 (gridDim)

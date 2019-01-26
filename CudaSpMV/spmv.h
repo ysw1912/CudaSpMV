@@ -5,6 +5,8 @@
 #include "light_spmv_core.h"
 #include "sparse_matrix.h"
 
+extern uint32_t numThreadsPerBlock, numBlocks;
+
 enum SpMV_Method
 {
 	CSR_CUSPARSE, CSR_LIGHTSPMV, BRC_SPMV, BRCP_SPMV, NUM_SPMV_METHODS
@@ -217,9 +219,9 @@ void spmvBrc(BrcMatrix<ValueType>& brc, uint32_t N, ValueType* res, float& total
 	printf("BRC-based SpMV Start...\n");
 	
 	uint32_t count = 1;
-	uint32_t rep = (uint32_t)ceil((float)brc.numBlocks * 32 / 4096);
+	uint32_t rep = (uint32_t)ceil((float)brc.numBlocks * 32 / (numBlocks * numThreadsPerBlock));
 	do {
-		brcspmv::brcSpMV<ValueType> << <4, 1024 >> > (rep, 32, d_rowPerm, d_col, d_value, d_blockPtr, d_block_width, d_numBlocks, d_x, d_y);
+		brcspmv::brcSpMV<ValueType><<<numBlocks, numThreadsPerBlock>>>(rep, 32, d_rowPerm, d_col, d_value, d_blockPtr, d_block_width, d_numBlocks, d_x, d_y);
 		checkCudaError(cudaMemcpy(d_x, d_y, num_vertices * sizeof(ValueType), cudaMemcpyDeviceToDevice));
 		printf("µÚ%d%dÂÖ\n", count / 10, count % 10);
 		count++;
@@ -249,7 +251,7 @@ void spmvBrcp(BrcPMatrix<ValueType>& brcP, uint32_t N, ValueType* res, float& to
 	Profiler::Start();
 
 	uint32_t num_vertices = static_cast<uint32_t>(brcP.num_vertices);
-	uint32_t numBlocks = static_cast<uint32_t>(brcP.blockPtr.size()) - 1;
+	uint32_t num_blocks = static_cast<uint32_t>(brcP.blockPtr.size()) - 1;
 	uint32_t *d_rowPerm, *d_rowSegLen, *d_col, *d_blockPtr;
 	ValueType *d_value, *d_x, *d_y;
 
@@ -280,9 +282,9 @@ void spmvBrcp(BrcPMatrix<ValueType>& brcP, uint32_t N, ValueType* res, float& to
 	printf("BRCP-based SpMV Start...\n");
 	uint32_t count = 1;
 	uint32_t B1 = 32;
-	uint32_t rep = (uint32_t)ceil((float)numBlocks * B1 / 4096);
+	uint32_t rep = (uint32_t)ceil((float)num_blocks * B1 / (numBlocks * numThreadsPerBlock));
 	do {
-		brcspmv::brcPlusSpMV<ValueType> << <4, 1024, 1024 * sizeof(ValueType) >> > (rep, B1, numBlocks, d_rowPerm, d_rowSegLen, d_col, d_value, d_blockPtr, d_x, d_y);
+		brcspmv::brcPlusSpMV<ValueType><<<numBlocks, numThreadsPerBlock, numThreadsPerBlock * sizeof(ValueType)>>>(rep, B1, num_blocks, d_rowPerm, d_rowSegLen, d_col, d_value, d_blockPtr, d_x, d_y);
 		checkCudaError(cudaMemcpy(d_x, d_y, num_vertices * sizeof(ValueType), cudaMemcpyDeviceToDevice));
 		printf("µÚ%d%dÂÖ\n", count / 10, count % 10);
 		count++;
@@ -307,6 +309,8 @@ void spmvBrcp(BrcPMatrix<ValueType>& brcP, uint32_t N, ValueType* res, float& to
 template <class ValueType, uint32_t ITER>
 void spmv(CsrMatrix<ValueType> &csr, ValueType* res, SpMV_Method sm)
 {
+	checkCudaError(cudaDeviceReset());
+
 	float total_time = 0.0;
 
 	switch (sm)

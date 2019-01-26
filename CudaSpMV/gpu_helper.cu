@@ -1,14 +1,12 @@
 #include "gpu_helper.h"
 
-void getInfo() {
+void getDeviceInfo(uint32_t& numThreadsPerBlock, uint32_t& numBlocks)
+{
 	int device;
 	checkCudaError(cudaGetDevice(&device));
 	cudaDeviceProp prop;
 	checkCudaError(cudaGetDeviceProperties(&prop, device));
-	uint32_t numThreadsPerBlock = prop.maxThreadsPerBlock;
-	uint32_t numBlocks = prop.multiProcessorCount
-		* (prop.maxThreadsPerMultiProcessor / numThreadsPerBlock);
-	
-	cout << numThreadsPerBlock << " " << numBlocks << endl;
-	cout << "memoryBusWidth: " << prop.memoryBusWidth << endl;
+	numThreadsPerBlock = prop.maxThreadsPerBlock;
+	numBlocks = prop.multiProcessorCount * (prop.maxThreadsPerMultiProcessor / numThreadsPerBlock);
+	printf("numThreadsPerBlock = %d, numBlocks = %d\n", numThreadsPerBlock, numBlocks);
 }

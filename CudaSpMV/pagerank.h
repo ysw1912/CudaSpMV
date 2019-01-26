@@ -3,6 +3,8 @@
 
 #include "spmv.h"
 
+extern uint32_t numThreadsPerBlock, numBlocks;
+
 template <typename ValueType>
 struct PrNode 
 {
@@ -122,20 +124,20 @@ void pagerankCuSparse(CsrMatrix<ValueType>& csr,
 
 	ValueType error = -1.0;
 	uint16_t count = 1;
-	uint32_t rep = (uint32_t)ceil((float)num_vertices / 4096);
+	uint32_t rep = (uint32_t)ceil((float)num_vertices / (numThreadsPerBlock * numBlocks));
 
 	do {
 		ValueType a = ValueType(1), b = ValueType(0);
 		spmvCuSparse(handle, num_vertices, num_vertices, num_edges, &a, descr, d_value, d_rowPtr, d_col, d_x, &b, d_y);
-		PR_Update << <4, 1024 >> > (damping, num_vertices, rep, d_x, d_y);
+		PR_Update<<<numBlocks, numThreadsPerBlock>>>(damping, num_vertices, rep, d_x, d_y);
 		checkCudaError(cudaMemset(d_error, 0, sizeof(ValueType)));
 		/*
 		thrust::device_ptr<ValueType> dev_y(d_y);
 		error = thrust::reduce(dev_y, dev_y + num_vertices, ValueType(0), thrust::plus<ValueType>());
 		*/
-		Reduce << <4, 1024, 1024 * sizeof(ValueType) >> > (d_y, num_vertices, d_error);
+		Reduce<<<numBlocks, numThreadsPerBlock, numThreadsPerBlock * sizeof(ValueType) >> > (d_y, num_vertices, d_error);
 		checkCudaError(cudaMemcpy(&error, d_error, sizeof(ValueType), cudaMemcpyDeviceToHost));
-		printf("第%d%d轮\t\tError: %f\n", count / 10, count % 10, error);
+		//printf("第%d%d轮\t\tError: %f\n", count / 10, count % 10, error);
 		++count;
 	} while (error > tolerant);
 
@@ -235,7 +237,7 @@ void pagerankLightSpMV(CsrMatrix<ValueType>& csr,
 
 	ValueType error;
 	uint16_t count = 1;
-	uint32_t rep = (uint32_t)ceil((float)num_vertices / 4096);
+	uint32_t rep = (uint32_t)ceil((float)num_vertices / (numThreadsPerBlock * numBlocks));
 	uint32_t mean_nnz = (uint32_t)rint((float)num_edges / num_vertices);
 	do {
 		ValueType alpha = ValueType(1), beta = ValueType(0);
@@ -249,11 +251,11 @@ void pagerankLightSpMV(CsrMatrix<ValueType>& csr,
 			spmvLight<ValueType*, 8, 1024 / 8>(d_rowCounter, num_vertices, d_rowPtr, d_col, d_value, d_x, d_y, alpha, beta);
 		else
 			spmvLight<ValueType*, 32, 1024 / 32>(d_rowCounter, num_vertices, d_rowPtr, d_col, d_value, d_x, d_y, alpha, beta);
-		PR_Update << <4, 1024 >> > (damping, num_vertices, rep, d_x, d_y);
+		PR_Update<<<numBlocks, numThreadsPerBlock>>>(damping, num_vertices, rep, d_x, d_y);
 		checkCudaError(cudaMemset(d_error, 0, sizeof(ValueType)));
-		Reduce << <4, 1024, 1024 * sizeof(ValueType) >> > (d_y, num_vertices, d_error);
+		Reduce<<<numBlocks, numThreadsPerBlock, numThreadsPerBlock * sizeof(ValueType)>>>(d_y, num_vertices, d_error);
 		checkCudaError(cudaMemcpy(&error, d_error, sizeof(ValueType), cudaMemcpyDeviceToHost));
-		printf("第%d%d轮\t\tError: %f\n", count / 10, count % 10, error);
+		//printf("第%d%d轮\t\tError: %f\n", count / 10, count % 10, error);
 		count++;
 	} while (error > tolerant);
 
@@ -326,15 +328,15 @@ void pagerankBrcSpMV(BrcMatrix<ValueType>& brc,
 	ValueType error;
 	uint32_t count = 1;
 	do {
-		uint32_t rep = (uint32_t)ceil((float)brc.numBlocks * 32 / 4096);
-		brcspmv::brcSpMV<ValueType> << <4, 1024 >> > (rep, 32, d_rowPerm, d_col, d_value, d_blockPtr, d_block_width, d_numBlocks, d_x, d_y);
-		rep = (uint32_t)ceil((float)num_vertices / 4096);
-		PR_Update << <4, 1024 >> > (damping, num_vertices, rep, d_x, d_y);
+		uint32_t rep = (uint32_t)ceil((float)brc.numBlocks * 32 / (numThreadsPerBlock * numBlocks));
+		brcspmv::brcSpMV<ValueType><<<numBlocks, numThreadsPerBlock>>>(rep, 32, d_rowPerm, d_col, d_value, d_blockPtr, d_block_width, d_numBlocks, d_x, d_y);
+		rep = (uint32_t)ceil((float)num_vertices / (numThreadsPerBlock * numBlocks));
+		PR_Update<<<numBlocks, numThreadsPerBlock>>>(damping, num_vertices, rep, d_x, d_y);
 		checkCudaError(cudaMemset(d_error, 0, sizeof(ValueType)));
-		Reduce << <4, 1024, 1024 * sizeof(ValueType) >> > (d_y, num_vertices, d_error);
+		Reduce<<<numBlocks, numThreadsPerBlock, numThreadsPerBlock * sizeof(ValueType)>>>(d_y, num_vertices, d_error);
 		checkCudaError(cudaMemset(d_y, 0, num_vertices * sizeof(ValueType)));
 		checkCudaError(cudaMemcpy(&error, d_error, sizeof(ValueType), cudaMemcpyDeviceToHost));
-		printf("第%d%d轮\t\tError: %f\n", count / 10, count % 10, error);
+		//printf("第%d%d轮\t\tError: %f\n", count / 10, count % 10, error);
 		count++;
 	} while (error > tolerant);
 
@@ -375,7 +377,7 @@ void pagerankBrcPSpMV(BrcPMatrix<ValueType>& brcP,
 	Profiler::Start();
 
 	uint32_t num_vertices = static_cast<uint32_t>(brcP.num_vertices);
-	uint32_t numBlocks = static_cast<uint32_t>(brcP.blockPtr.size()) - 1;
+	uint32_t num_blocks = static_cast<uint32_t>(brcP.blockPtr.size()) - 1;
 	uint32_t *d_rowPerm, *d_rowSegLen, *d_col, *d_blockPtr;
 	ValueType *d_value, *d_x, *d_y, *d_error;
 
@@ -408,16 +410,16 @@ void pagerankBrcPSpMV(BrcPMatrix<ValueType>& brcP,
 	ValueType error;
 	uint32_t count = 1;
 	uint32_t B1 = 32;
-	uint32_t repSpMV = (uint32_t)ceil((float)numBlocks * B1 / 4096);
-	uint32_t repPR = (uint32_t)ceil((float)num_vertices / 4096);
+	uint32_t repSpMV = (uint32_t)ceil((float)num_blocks * B1 / (numThreadsPerBlock * numBlocks));
+	uint32_t repPR = (uint32_t)ceil((float)num_vertices / (numThreadsPerBlock * numBlocks));
 	do {
-		brcspmv::brcPlusSpMV<ValueType> << <4, 1024, 1024 * sizeof(ValueType) >> > (repSpMV, B1, numBlocks, d_rowPerm, d_rowSegLen, d_col, d_value, d_blockPtr, d_x, d_y);
-		PR_Update << <4, 1024 >> > (damping, num_vertices, repPR, d_x, d_y);
+		brcspmv::brcPlusSpMV<ValueType><<<numBlocks, numThreadsPerBlock, numThreadsPerBlock * sizeof(ValueType)>>>(repSpMV, B1, num_blocks, d_rowPerm, d_rowSegLen, d_col, d_value, d_blockPtr, d_x, d_y);
+		PR_Update<<<numBlocks, numThreadsPerBlock>>>(damping, num_vertices, repPR, d_x, d_y);
 		checkCudaError(cudaMemset(d_error, 0, sizeof(ValueType)));
-		Reduce << <4, 1024, 1024 * sizeof(ValueType) >> > (d_y, num_vertices, d_error);
+		Reduce<<<numBlocks, numThreadsPerBlock, numThreadsPerBlock * sizeof(ValueType)>>>(d_y, num_vertices, d_error);
 		checkCudaError(cudaMemset(d_y, 0, num_vertices * sizeof(ValueType)));
 		checkCudaError(cudaMemcpy(&error, d_error, sizeof(ValueType), cudaMemcpyDeviceToHost));
-		printf("第%d%d轮\t\tError: %f\n", count / 10, count % 10, error);
+		//printf("第%d%d轮\t\tError: %f\n", count / 10, count % 10, error);
 		count++;
 	} while (error > tolerant);
 
@@ -450,8 +452,10 @@ void pagerank(CsrMatrix<ValueType> &csr,
 			  PrNode<ValueType>*& vecPR,
 			  SpMV_Method sm, 
 			  const ValueType damping = 0.85,
-			  const ValueType tolerant = 1.0e-4)
+			  const ValueType tolerant = 1.0e-5)
 {
+	checkCudaError(cudaDeviceReset());
+
 	float total_time = 0.0;
 
 	switch (sm)

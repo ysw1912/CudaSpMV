@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="brc_spmv_core.h" />
     <ClInclude Include="cpu_helper.h" />
+    <ClInclude Include="gputimer.h" />
     <ClInclude Include="gpu_helper.h" />
     <ClInclude Include="light_spmv_core.h" />
     <ClInclude Include="mmio.h" />

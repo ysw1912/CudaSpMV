@@ -292,7 +292,7 @@ void CooMatrix<ValueType>::ReadFileSetValue(const string &filename, bool isDirec
 * isDirected	-	是否有向图
 */
 template <typename ValueType>
-void CooMatrix<ValueType>::ReadFileContainValue(const string &filename, bool isDirected)
+void CooMatrix<ValueType>::ReadFileContainValue(const string& filename, bool isDirected)
 {
 	FILE *fp;
 	Profiler::Start();
@@ -344,7 +344,7 @@ void CooMatrix<ValueType>::ReadFileContainValue(const string &filename, bool isD
 		col.resize(num_edges);
 		value.resize(num_edges);
 		for (size_t i = 0; i < num_edges; i++) {
-			fscanf(fp, "%d %d %f\n", &row[i], &col[i], &value[i]);
+			fscanf(fp, "%d%d%f\n", &row[i], &col[i], &value[i]);
 			/* adjust from 1-based to 0-based */
 			row[i]--;
 			col[i]--;
@@ -542,7 +542,7 @@ BrcPMatrix<ValueType>::BrcPMatrix(const CsrMatrix<CsrValueType> &csr)
 	this->num_vertices = csr.num_vertices;
 	this->num_edges = csr.num_edges;
 
-	thrust::host_vector<rowOfBrc> rowVec(num_vertices);		// 定制的行数组
+	vector<rowOfBrc> rowVec(num_vertices);		// 定制的行数组
 	uint32_t maxNnz = 0;
 	for (uint32_t i = 0; i < num_vertices; i++) {
 		uint32_t nnz = csr.rowPtr[i + 1] - csr.rowPtr[i];
@@ -577,7 +577,7 @@ BrcPMatrix<ValueType>::BrcPMatrix(const CsrMatrix<CsrValueType> &csr)
 	while (idx < num_vertices && rowVec[idx].nnz != 0) {
 		ValueType** blockValue = new ValueType*[B1];
 		uint32_t** blockCol = new uint32_t*[B1];
-
+	
 		// 确定当前块的宽度
 		uint32_t blockWidth;
 		if (rowVec[idx].currentPtr == 0 && rowVec[idx].nnz > B2 * 64) {
@@ -601,8 +601,8 @@ BrcPMatrix<ValueType>::BrcPMatrix(const CsrMatrix<CsrValueType> &csr)
 				blockWidth = B2;
 			}
 		}
+
 		blockWidthArr.push_back(blockWidth);
-		// printf("Block - %d Width = %d\n", numBlocks + 1, blockWidth);
 
 		// rowPerm中一次性插入B1个元素
 		rowPerm.insert(rowPerm.end(), B1, 0);
@@ -616,11 +616,10 @@ BrcPMatrix<ValueType>::BrcPMatrix(const CsrMatrix<CsrValueType> &csr)
 			else {
 				// 按需修改先前插入的元素
 				rowPerm[rowPerm.size() - B1 + i] = rowVec[idx].row;
-
 				uint32_t curPtr = rowVec[idx].currentPtr;
+				uint32_t rowStart = csr.rowPtr[rowVec[idx].row];
+				uint32_t rowEnd = csr.rowPtr[rowVec[idx].row + 1];
 				for (uint32_t j = curPtr; j < curPtr + blockWidth; j++) {
-					uint32_t rowStart = csr.rowPtr[rowVec[idx].row];
-					uint32_t rowEnd = csr.rowPtr[rowVec[idx].row + 1];
 					if (j < rowEnd - rowStart) {
 						blockValue[i][j - curPtr] = csr.value[rowStart + j];
 						blockCol[i][j - curPtr] = csr.col[rowStart + j];
@@ -630,7 +629,6 @@ BrcPMatrix<ValueType>::BrcPMatrix(const CsrMatrix<CsrValueType> &csr)
 						blockCol[i][j - curPtr] = csr.col[rowEnd - 1];
 					}
 				}
-
 				// 更新rowVec的idx和currentPtr
 				rowVec[idx].currentPtr += blockWidth;
 				if (rowVec[idx].currentPtr >= rowVec[idx].nnz) {	 // 该行结束
@@ -640,7 +638,7 @@ BrcPMatrix<ValueType>::BrcPMatrix(const CsrMatrix<CsrValueType> &csr)
 			// printf("value: "); Print<ValueType>(blockValue[i], blockWidth);
 			// printf("col:   "); Print<uint32_t>(blockCol[i], blockWidth);
 		}
-		
+
 		// 将blockValue数据传入value
 		//   blockCol  数据传入col
 		for (uint32_t j = 0; j < blockWidth; j++) {

@@ -3,26 +3,24 @@
 
 using ValueType = float;
 
+uint32_t numThreadsPerBlock, numBlocks;
+
 void TestSpMV();
 void TestPageRank();
 
 int main()
 {
-	//getInfo(); return 0;
-	//test::test02();
+	getDeviceInfo(numThreadsPerBlock, numBlocks);
 
-	checkCudaError(cudaDeviceReset());
+	TestSpMV();
+	//TestPageRank();
 	
-	//TestSpMV();
-	TestPageRank();
-
 	return 0;
 }
 
 void TestSpMV()
 {
-	//const string FILE_PATH = "F:\\networks\\nvidia research\\webbase-1M.mtx";
-	const string FILE_PATH = "F:\\networks\\soc-sign-bitcoin-otc.mtx";
+	const string FILE_PATH = "F:\\networks\\udgraph\\cage14.mtx";
 	CooMatrix<ValueType> coo;
 	bool isDirected = true;
 	//coo.ReadFileSetValue(FILE_PATH, isDirected);
@@ -53,11 +51,12 @@ void TestSpMV()
 
 void TestPageRank()
 {
-	//const string FILE_PATH = "F:\\networks\\real2.csv";
-	const string FILE_PATH = "F:\\networks\\law\\dblp-2010.mtx";
+	const string FILE_PATH = "F:\\networks\\real3.csv";
+	//const string FILE_PATH = "F:\\networks\\snap\\eu-2005.mtx";
 	CooMatrix<ValueType> coo;
 	bool isDirected = false;
-	coo.ReadFileSetValue(FILE_PATH, isDirected);
+	coo.ReadFileSetValue(FILE_PATH, isDirected, 0);
+	//coo.ReadFileContainValue(FILE_PATH, isDirected);
 
 	Profiler::Start();
 	initValues(coo);
@@ -70,8 +69,12 @@ void TestPageRank()
 	uint32_t N = static_cast<uint32_t>(coo.num_vertices);
 
 	/* 可选格式 - CSR_CUSPARSE, CSR_LIGHTSPMV, BRC_SPMV, BRCP_SPMV */
+	/*PrNode<ValueType>* vecPR = new PrNode<ValueType>[N];
+	pagerank<ValueType, 2>(csr, vecPR, BRCP_SPMV);
+	delete[] vecPR;*/
+
 	PrNode<ValueType>* vecPR1 = new PrNode<ValueType>[N];
-	pagerank<ValueType, 1>(csr, vecPR1, CSR_CUSPARSE);
+	pagerank<ValueType, 1>(csr, vecPR1, CSR_LIGHTSPMV);
 	PR_Print(vecPR1, N);
 	
 	PrNode<ValueType>* vecPR2 = new PrNode<ValueType>[N];
