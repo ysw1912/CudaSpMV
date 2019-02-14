@@ -447,9 +447,10 @@ void pagerankBrcPSpMV(BrcPMatrix<ValueType>& brcP,
 /* ------------------------------------------------------------------------------- */
 
 // pagerank
-template <class ValueType, uint32_t ITER>
+template <class ValueType>
 void pagerank(CsrMatrix<ValueType> &csr,
 			  PrNode<ValueType>*& vecPR,
+			  uint32_t times,
 			  SpMV_Method sm, 
 			  const ValueType damping = 0.85,
 			  const ValueType tolerant = 1.0e-5)
@@ -461,13 +462,13 @@ void pagerank(CsrMatrix<ValueType> &csr,
 	switch (sm)
 	{
 	case CSR_CUSPARSE: {
-		for (uint32_t i = 0; i < ITER; ++i)
+		for (uint32_t i = 0; i < times; ++i)
 			pagerankCuSparse(csr, vecPR, total_time, damping, tolerant);
 		printf("Average CSR-CuSparse PageRank Time: ");
 		break;
 	}
 	case CSR_LIGHTSPMV: {
-		for (uint32_t i = 0; i < ITER; ++i)
+		for (uint32_t i = 0; i < times; ++i)
 			pagerankLightSpMV<ValueType>(csr, vecPR, total_time, damping, tolerant);
 		printf("Average CSR-LightSpMV PageRank Time: ");
 		break;
@@ -478,7 +479,7 @@ void pagerank(CsrMatrix<ValueType> &csr,
 		Profiler::Finish();
 		printf("%f (s)\nConvert to BRC format Finished.\n",
 			Profiler::dumpDuration() / CLOCKS_PER_SEC);
-		for (uint32_t i = 0; i < ITER; ++i)
+		for (uint32_t i = 0; i < times; ++i)
 			pagerankBrcSpMV<ValueType>(brc, vecPR, total_time, damping, tolerant);
 		printf("Average BRC-SpMV PageRank Time: ");
 		break;
@@ -489,7 +490,7 @@ void pagerank(CsrMatrix<ValueType> &csr,
 		Profiler::Finish();
 		printf("%f (s)\nConvert to BRCP format Finished.\n",
 			Profiler::dumpDuration() / CLOCKS_PER_SEC);
-		for (uint32_t i = 0; i < ITER; ++i)
+		for (uint32_t i = 0; i < times; ++i)
 			pagerankBrcPSpMV<ValueType>(brcP, vecPR, total_time, damping, tolerant);
 		printf("Average BRCP-SpMV PageRank Time: ");
 		break;
@@ -497,7 +498,7 @@ void pagerank(CsrMatrix<ValueType> &csr,
 	default:
 		break;
 	}
-	printf("%f (ms)\n\n", total_time / ITER);
+	printf("%f (ms)\n\n", total_time / times);
 
 	// PR½á¹ûÅÅÐò
 	std::stable_sort(vecPR, vecPR + csr.num_vertices, PrNode<ValueType>::greater);

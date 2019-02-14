@@ -23,11 +23,7 @@
 //#include <thrust\sort.h>
 
 #include <cooperative_groups.h>
-
-#if defined(__cplusplus) && defined(__CUDACC__)
-# include "cooperative_groups_helpers.h"
 namespace cg = cooperative_groups;
-#endif
 
 #define checkCudaError(err) __CheckCudaError( err, __FILE__, __LINE__ )
 static void __CheckCudaError(cudaError_t err, const char *file, const int32_t line)

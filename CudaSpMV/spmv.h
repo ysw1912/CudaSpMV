@@ -306,8 +306,8 @@ void spmvBrcp(BrcPMatrix<ValueType>& brcP, uint32_t N, ValueType* res, float& to
 
 /* ---------------------------- SpMV ---------------------------- */
 
-template <class ValueType, uint32_t ITER>
-void spmv(CsrMatrix<ValueType> &csr, ValueType* res, SpMV_Method sm)
+template <class ValueType>
+void spmv(CsrMatrix<ValueType> &csr, ValueType* res, uint32_t times, SpMV_Method sm)
 {
 	checkCudaError(cudaDeviceReset());
 
@@ -316,12 +316,12 @@ void spmv(CsrMatrix<ValueType> &csr, ValueType* res, SpMV_Method sm)
 	switch (sm)
 	{
 	case CSR_CUSPARSE: {
-		spmvCuSparse(csr, ITER, res, total_time);
+		spmvCuSparse(csr, times, res, total_time);
 		printf("Average CSR-based CuSparseSpMV Time: ");
 		break;
 	}
 	case CSR_LIGHTSPMV: {
-		spmvLight<ValueType>(csr, ITER, res, total_time);
+		spmvLight<ValueType>(csr, times, res, total_time);
 		printf("Average CSR-based LightSpMV Time: ");
 		break;
 	}
@@ -331,7 +331,7 @@ void spmv(CsrMatrix<ValueType> &csr, ValueType* res, SpMV_Method sm)
 		Profiler::Finish();
 		printf("%f (s)\nConvert to BRC format Finished.\n",
 			Profiler::dumpDuration() / CLOCKS_PER_SEC);
-		spmvBrc<ValueType>(brc, ITER, res, total_time);
+		spmvBrc<ValueType>(brc, times, res, total_time);
 		printf("Average BRC-based SpMV Time: ");
 		break;
 	}
@@ -341,14 +341,14 @@ void spmv(CsrMatrix<ValueType> &csr, ValueType* res, SpMV_Method sm)
 		Profiler::Finish();
 		printf("%f (s)\nConvert to BRCP format Finished.\n",
 			Profiler::dumpDuration() / CLOCKS_PER_SEC);
-		spmvBrcp<ValueType>(brcP, ITER, res, total_time);
+		spmvBrcp<ValueType>(brcP, times, res, total_time);
 		cout << "Average BRCP-based SpMV Time: ";
 		break;
 	}
 	default:
 		break;
 	}
-	printf("%f (ms)\n\n", total_time / ITER);
+	printf("%f (ms)\n\n", total_time / times);
 }
 
 #endif

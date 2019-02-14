@@ -21,9 +21,6 @@
     <ClInclude Include="cpu_helper.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="test.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="gpu_helper.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -78,6 +75,9 @@
     </CudaCompile>
     <CudaCompile Include="spmv.cu">
       <Filter>源文件</Filter>
+    </CudaCompile>
+    <CudaCompile Include="test.cuh">
+      <Filter>头文件</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

@@ -1,5 +1,13 @@
+#pragma once
+
 #include "mmio.h"
 #include "pagerank.h"
+
+uint32_t next_pow_of_2(uint32_t x);
+uint32_t iDivUp(uint32_t dividend, uint32_t divisor);
+
+#define MAX_SCAN_ELEMENTS	67108864	// 2^6 * 2^20
+#define BLOCK_SIZE			1024
 
 namespace test
 {
@@ -40,10 +48,9 @@ namespace test
 		}
 	}
 
-	void test01();
-	void test02();
-
-	void ExclusiveScanHost(uint32_t* dst, uint32_t* src, uint32_t size);
-	void ExclusiveScan(uint32_t* d_Dst, uint32_t* d_Src, uint32_t size);
+	/* 神TM难！我太强啦~ */
+	enum ScanType { Exclusive, Inclusive };
+	void TestScan();
+	void TestSegmentedScan();
 }
 

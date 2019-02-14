@@ -55,6 +55,25 @@ void Print(const void* ep, size_t n, bool show_all = true)
 	printf("}\n");
 }
 
+template <typename T>
+void PrintByRow(const void* ep, size_t n, size_t stride)
+{
+	printf("{ ");
+	size_t i = 0, row = 0;
+	while (true) {
+		if (row)	printf("\n\t");
+		for (i = row * stride; i < row * stride + 6; i++)
+			cout << *(static_cast<const T*>(ep) + i) << "\t";
+		printf("...   ");
+		size_t bound = MIN((row + 1) * stride, n);
+		for (size_t i = bound - 4; i < bound; i++)
+			cout << *(static_cast<const T*>(ep) + i) << "\t";
+		if (bound == n)	break;
+		++row;
+	}
+	printf("}\n");
+}
+
 // 交换vp1和vp2指向地址的sizeBytes
 void Swap(void *vp1, void *vp2, int sizeBytes);
 

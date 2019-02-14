@@ -29,7 +29,7 @@
     <ClInclude Include="profiler.h" />
     <ClInclude Include="sparse_matrix.h" />
     <ClInclude Include="spmv.h" />
-    <ClInclude Include="test.h" />
+    <CudaCompile Include="test.cuh" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cpu_helper.cpp" />
@@ -138,6 +138,10 @@
       <AdditionalLibraryDirectories>$(CUDA_PATH_V9_0)\lib\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>cublas.lib;cublas_device.lib;cuda.lib;cudadevrt.lib;cudart.lib;cudart_static.lib;cufft.lib;cufftw.lib;curand.lib;cusolver.lib;cusparse.lib;nppc.lib;nppial.lib;nppicc.lib;nppicom.lib;nppidei.lib;nppif.lib;nppig.lib;nppim.lib;nppist.lib;nppisu.lib;nppitc.lib;npps.lib;nvblas.lib;nvcuvid.lib;nvgraph.lib;nvml.lib;nvrtc.lib;OpenCL.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <CudaRuntime>Shared</CudaRuntime>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

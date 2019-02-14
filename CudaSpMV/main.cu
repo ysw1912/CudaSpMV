@@ -1,30 +1,39 @@
 #include "pagerank.h"
-#include "test.h"
+#include "test.cuh"
 
 using ValueType = float;
 
 uint32_t numThreadsPerBlock, numBlocks;
 
-void TestSpMV();
-void TestPageRank();
+void TestSpMV(const char* file, bool isDirected, bool isWeighted, uint32_t times);
+void TestPageRank(const char* file, bool isDirected, bool isWeighted, uint32_t times);
 
 int main()
 {
+	//test::TestScan();
+	test::TestSegmentedScan();
+	return 0;
+
 	getDeviceInfo(numThreadsPerBlock, numBlocks);
 
-	TestSpMV();
-	//TestPageRank();
+	const char* file = "cage14.mtx";
+	bool isDirected = true;
+	bool isWeighted = true;
+	uint32_t times = 20;
+	TestSpMV(file, isDirected, isWeighted, times);
+	//TestPageRank(file, isDirected, isWeighted, times);
 	
 	return 0;
 }
 
-void TestSpMV()
+void TestSpMV(const char* file, bool isDirected, bool isWeighted, uint32_t times)
 {
-	const string FILE_PATH = "F:\\networks\\udgraph\\cage14.mtx";
+	const string FILE_PATH = string("F:\\networks\\spmv\\") + string(file);
 	CooMatrix<ValueType> coo;
-	bool isDirected = true;
-	//coo.ReadFileSetValue(FILE_PATH, isDirected);
-	coo.ReadFileContainValue(FILE_PATH, isDirected);
+	if (isWeighted)
+		coo.ReadFileContainValue(FILE_PATH, isDirected);
+	else
+		coo.ReadFileSetValue(FILE_PATH, isDirected);
 
 	Profiler::Start();
 	CsrMatrix<ValueType> csr(coo);
@@ -36,12 +45,12 @@ void TestSpMV()
 
 	/* 可选格式 - CSR_CUSPARSE, CSR_LIGHTSPMV, BRC_SPMV, BRCP_SPMV */
 	vector<ValueType> res(N);
-	spmv<ValueType, 1>(csr, &res[0], CSR_CUSPARSE);
+	spmv<ValueType>(csr, &res[0], times, CSR_CUSPARSE);
 
 	vector<ValueType> res1(N);
-	spmv<ValueType, 1>(csr, &res1[0], BRC_SPMV);
+	spmv<ValueType>(csr, &res1[0], times, BRC_SPMV);
 	vector<ValueType> res2(N);
-	spmv<ValueType, 1>(csr, &res2[0], BRCP_SPMV);
+	spmv<ValueType>(csr, &res2[0], times, BRCP_SPMV);
 
 	ValueType re1 = RelativeError(res, res1);
 	ValueType re2 = RelativeError(res, res2);
@@ -49,14 +58,14 @@ void TestSpMV()
 	printf("BRC's RE = %f, BRCP's RE = %f\n", re1, re2);
 }
 
-void TestPageRank()
+void TestPageRank(const char* file, bool isDirected, bool isWeighted, uint32_t times)
 {
-	const string FILE_PATH = "F:\\networks\\real3.csv";
-	//const string FILE_PATH = "F:\\networks\\snap\\eu-2005.mtx";
+	const string FILE_PATH = string("F:\\networks\\pagerank\\") + string(file);
 	CooMatrix<ValueType> coo;
-	bool isDirected = false;
-	coo.ReadFileSetValue(FILE_PATH, isDirected, 0);
-	//coo.ReadFileContainValue(FILE_PATH, isDirected);
+	if (isWeighted)
+		coo.ReadFileContainValue(FILE_PATH, isDirected);
+	else
+		coo.ReadFileSetValue(FILE_PATH, isDirected);
 
 	Profiler::Start();
 	initValues(coo);
@@ -69,20 +78,16 @@ void TestPageRank()
 	uint32_t N = static_cast<uint32_t>(coo.num_vertices);
 
 	/* 可选格式 - CSR_CUSPARSE, CSR_LIGHTSPMV, BRC_SPMV, BRCP_SPMV */
-	/*PrNode<ValueType>* vecPR = new PrNode<ValueType>[N];
-	pagerank<ValueType, 2>(csr, vecPR, BRCP_SPMV);
-	delete[] vecPR;*/
-
 	PrNode<ValueType>* vecPR1 = new PrNode<ValueType>[N];
-	pagerank<ValueType, 1>(csr, vecPR1, CSR_LIGHTSPMV);
+	pagerank<ValueType>(csr, vecPR1, times, CSR_LIGHTSPMV);
 	PR_Print(vecPR1, N);
 	
 	PrNode<ValueType>* vecPR2 = new PrNode<ValueType>[N];
-	pagerank<ValueType, 1>(csr, vecPR2, BRC_SPMV);
+	pagerank<ValueType>(csr, vecPR2, times, BRC_SPMV);
 	PR_Print(vecPR2, N);
 
 	PrNode<ValueType>* vecPR3 = new PrNode<ValueType>[N];
-	pagerank<ValueType, 1>(csr, vecPR3, BRCP_SPMV);
+	pagerank<ValueType>(csr, vecPR3, times, BRCP_SPMV);
 	PR_Print(vecPR3, N);
 
 	int n = 100;
